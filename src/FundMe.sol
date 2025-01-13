@@ -13,12 +13,12 @@ contract FundMe {
     AggregatorV3Interface internal s_priceFeed;
 
     //imatable(set at deployment time) and constant(set at compile time) do not get store in storage
-    address public immutable i_owner;
+    address public immutable i_owner; //i_ for imutables
     uint256 public constant MINIMUM_USD = 5 * 1e18; //5 USD with 18 decimals
 
     //we need array + map approach as maps can't iterate in solidity
-    address[] public funders;
-    mapping(address => uint256) public addressFundedMap;
+    address[] public s_funders; //s_ is for storage variables
+    mapping(address => uint256) public s_addressFundedMap;
 
     /*
      Created a object with Interface(ABI) and address
@@ -28,26 +28,26 @@ contract FundMe {
         i_owner = msg.sender;
     }
 
-
-    
-
     //User can send Eth(>5USD) to contract
     function fund() public payable {
         //checking the value > 5 USD else revert
-        require(PriceConverter.getConversionRate(s_priceFeed, msg.value) >= MINIMUM_USD, "You need to spend more ETH!");
-        funders.push(msg.sender);
-        addressFundedMap[msg.sender] = msg.value;
+        require(PriceConverter.getConversionRate(
+            s_priceFeed, msg.value) >= MINIMUM_USD,
+            "You need to spend more ETH!"
+        );
+        s_funders.push(msg.sender);
+        s_addressFundedMap[msg.sender] = msg.value;
     }
 
     function withdraw() public onlyOwner {
         //looping on funders array
-        for(uint256 i = 0; i<funders.length; i++) {
-            address funder = funders[i];
+        for(uint256 i = 0; i<s_funders.length; i++) {
+            address funder = s_funders[i];
             //reset funder on map
-            addressFundedMap[funder] = 0;
+            s_addressFundedMap[funder] = 0;
         }
         //reseting funders array to a new array
-        funders = new address[](0);
+        s_funders = new address[](0);
 
         //three different ways to send fund from contract
 

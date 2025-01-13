@@ -8,6 +8,8 @@ import {DeployFundMe} from "../script/DeployFundMe.s.sol";
 contract FundMeTest is Test {
     FundMe fundMe;
 
+    address USER = makeAddr("user"); //this is a feature of foundry to create a new user & use to make txs
+
     // runs first, and deploys contract on temperory anvil chain
     function setUp() external {
         DeployFundMe deployFundMe = new DeployFundMe(); //calling script to deploy fund me contract
@@ -24,6 +26,48 @@ contract FundMeTest is Test {
 
     function testAggregotorVersion() public view {
         assertEq(fundMe.getAggregotorVersion(), 4);
+    }
+
+    function testNoEthToFund() public {
+        vm.expectRevert();
+        fundMe.fund();
+    }
+
+    function testNotEnoughEthToFund() public {
+        vm.expectRevert();
+        fundMe.fund{value: 10e10}();
+    }
+
+    function testAddressFundedMap() public {
+        fundMe.fund{value: 10e18}();
+        assertEq(fundMe.s_addressFundedMap(address(this)), 10e18);
+    }
+
+    function testAddressFundedMapUser() public {
+        vm.prank(USER); //this means that the next TX will be send by User created for testing and not the test contract(address(this))
+        vm.deal(USER, 10e19); //this will add some money in USER account
+
+        fundMe.fund{value: 10e18}();
+        assertEq(fundMe.s_addressFundedMap((USER)), 10e18);
+    }
+
+    function testFundersArray() public {
+        vm.prank(USER);
+        vm.deal(USER, 10e19);
+        fundMe.fund{value: 10e18}();
+
+        assertEq(fundMe.s_funders(0), USER);
+    }
+
+    function testOnlyTheOwnerCanWithdraw() public {
+        vm.expectRevert();
+        vm.prank(USER); //USER is calling withdraw but the owner is Test Contract
+        fundMe.withdraw();
+    }
+
+    function testWithdraw() public {
+        vm.expectRevert();
+        fundMe.withdraw();
     }
 }
 
