@@ -2,9 +2,13 @@
 pragma solidity ^0.8.26;
 
 import {Test, console} from "forge-std/Test.sol"; //importing standard testing lib
-import {FundMe} from "../src/FundMe.sol";
-import {DeployFundMe} from "../script/DeployFundMe.s.sol";
+import {FundMe} from "../..//src/FundMe.sol";
+import {DeployFundMe} from "../../script/DeployFundMe.s.sol";
 
+/*
+Unit tests 
+- individual components of contract
+*/
 contract FundMeTest is Test {
     FundMe fundMe;
 
