@@ -29,7 +29,7 @@ contract FundMeTest is Test {
     }
 
     function testNoEthToFund() public {
-        vm.expectRevert();
+        vm.expectRevert(); //expect a revert from contract call as if do not meet the require check
         fundMe.fund();
     }
 
@@ -51,23 +51,36 @@ contract FundMeTest is Test {
         assertEq(fundMe.s_addressFundedMap((USER)), 10e18);
     }
 
-    function testFundersArray() public {
+    //instead of same code in each test, we can just call modifier and save code
+    modifier fundUser() {
         vm.prank(USER);
         vm.deal(USER, 10e19);
         fundMe.fund{value: 10e18}();
+        _;
+    }
 
+    function testFundersArray() public fundUser {
         assertEq(fundMe.s_funders(0), USER);
     }
 
-    function testOnlyTheOwnerCanWithdraw() public {
+    function testOnlyTheOwnerCanWithdraw() public fundUser {
         vm.expectRevert();
-        vm.prank(USER); //USER is calling withdraw but the owner is Test Contract
         fundMe.withdraw();
     }
 
-    function testWithdraw() public {
-        vm.expectRevert();
+    function testWithdraw() public fundUser {
+        //user has funded the contract already (check modifier)
+        uint256 startingOwnerBalance = fundMe.i_owner().balance;
+        uint256 startingFundMeBalance = address(fundMe).balance;
+
+        vm.prank(fundMe.i_owner()); //next transacrtion is done by owner
         fundMe.withdraw();
+
+        uint256 endingOwnerBalance = fundMe.i_owner().balance;
+        uint256 endingFundMeBalance = address(fundMe).balance;
+
+        assertEq(endingFundMeBalance, 0);
+        assertEq(endingOwnerBalance, startingFundMeBalance + startingOwnerBalance);
     }
 }
 
@@ -84,4 +97,9 @@ Command: forge test --fork-url $MAINNET_RPC_URL
 3) Integration/Staging Test(5-10%)
 Least common, runs on actual testnet before deployment
 Most expensive and slowest
+*/
+
+/* snapshot run cmd :
+forge snapshot --match-test "<test name>"
+this will give the gas calculation
 */

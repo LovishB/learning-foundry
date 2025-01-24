@@ -39,6 +39,7 @@ contract FundMe {
         s_addressFundedMap[msg.sender] = msg.value;
     }
 
+    //owner can withdraw the balance of this contract which has been funded by other
     function withdraw() public onlyOwner {
         //looping on funders array
         for(uint256 i = 0; i<s_funders.length; i++) {
@@ -49,10 +50,11 @@ contract FundMe {
         //reseting funders array to a new array
         s_funders = new address[](0);
 
-        //three different ways to send fund from contract
-
-        //wrap address as payable object
+        //sender addresss here will be owner
         address senderAddress = msg.sender;
+        //now we will send the entire balance of this contract to owner
+
+        //three different ways to send fund from contract
 
         //1 transfer - it returns error if failed, max 2300 gas
         // payable(senderAddress).transfer(address(this).balance);
